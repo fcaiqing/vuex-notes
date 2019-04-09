@@ -106,3 +106,64 @@ registerModule([], options)
     }
 }
 ```
+* ### 响应式原理
+>通过定义属性存取器实现数据响应式
+```javascript
+
+function callback(k,val) {
+    console.log(`${k} data updated to ${val}`)
+}
+
+var obj = {
+    title: "people list",
+    people: [
+        {
+            name: "ca",
+            age: 29,
+            habits: ["music", "hiking"]
+        },
+        {
+            name: "cq",
+            age: 30,
+            habits: ["music", "hiking"]
+        },
+        {
+            name: "cv",
+            age: 90,
+            habits: ["music", "hiking"]
+        },
+    ]
+}
+/**
+ * @description: 数据响应式化
+ * @param {obj} 目标数据 
+ * @return: void
+ */
+function activeDefine(obj) {
+    if (typeof obj != "object") {
+        throw new Error("param is not a object")
+    }
+    Object.keys(obj).forEach(k => {
+        const value = obj[k]
+        if (typeof obj[k] != "object") {
+            Object.defineProperty(obj, k, {
+                configurable: true,
+                enumerable: true,
+                get: () => {
+                    return value
+                },
+                set: val => {
+                    if (val === value) return
+                    callback(k, val)
+                }
+            })
+        } else {
+            activeDefine(obj[k])
+        }
+    });
+}
+activeDefine(obj)
+obj.title = "op"    //title data updated to op
+obj.people[1].age = 189 //age data updated to 189
+
+```
