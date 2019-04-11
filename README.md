@@ -307,5 +307,64 @@ function forEach(obj, fn) {
         fn(obj[key], key)
     })
 }
-
+//输出
+{
+    state: {
+        name: 'xxx',
+        a: { name: 'xxx', aa: [Object] },
+        b: { name: 'xxx' }
+    },
+    getters: {
+        name: [Function: name],
+        'a/name': [Function: name],
+        'a/aa/name': [Function: name],
+        'b/name': [Function: name]
+    },
+    actions: {
+        add: [Function: add],
+        'a/add': [Function: add],
+        'a/aa/add': [Function: add],
+        'b/add': [Function: add]
+    },
+    mutations: {
+        ADD_NAME: [Function: ADD_NAME],
+        'a/ADD_NAME': [Function: ADD_NAME],
+        'a/aa/ADD_NAME': [Function: ADD_NAME],
+        'b/ADD_NAME': [Function: ADD_NAME]
+    },
+    modules: {
+        a: {
+            state: [Object],
+            getters: [Object],
+            actions: [Object],
+            mutations: [Object],
+            modules: [Object]
+        },
+        b: {
+            state: [Object],
+            getters: [Object],
+            actions: [Object],
+            mutations: [Object]
+        },
+        'a/': {
+            state: [Object],
+            getters: [Object],
+            actions: [Object],
+            mutations: [Object],
+            modules: [Object]
+        },
+        'a/aa/': {
+            state: [Object],
+            getters: [Object],
+            actions: [Object],
+            mutations: [Object]
+        },
+        'b/': {
+            state: [Object],
+            getters: [Object],
+            actions: [Object],
+            mutations: [Object]
+        }
+    }
+}
 ```
