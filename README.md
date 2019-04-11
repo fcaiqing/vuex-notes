@@ -1,6 +1,7 @@
 ### vuex学习笔记
 - [模块解析方式](#模块解析方式)
 - [响应式原理](#响应式原理)
+- [模块安装](#模块安装)
 * #### 模块解析方式
 >通过深度优先进行节点遍历，每遍历节点时更新路径进行路径跟踪，从而获得目标数据
 
@@ -167,5 +168,144 @@ function activeDefine(obj) {
 activeDefine(obj)
 obj.title = "op"    //title data updated to op
 obj.people[1].age = 189 //age data updated to 189
+
+```
+* ### 模块安装
+>store各个模块的安装过程其实就是数据扁平化处理过程，处理过程中根据namespaced来决定是否启用命名空间
+1. 实例代码
+```javascript
+var store = {
+    state: {
+        name: 'xxx'
+    },
+    getters: {
+        name: () => {}
+    },
+    actions: {
+        add: () => {}
+    },
+    mutations: {
+        ADD_NAME: (state, payload) => {
+            state.name += payload.last
+        }
+    },
+    modules: {
+        a: {
+            state: {
+                name: 'xxx'
+            },
+            getters: {
+                name: () => {}
+            },
+            actions: {
+                add: () => {}
+            },
+            mutations: {
+                ADD_NAME: (state, payload) => {
+                    state.name += payload.last
+                }
+            },
+            modules: {
+                aa: {
+                    state: {
+                        name: 'xxx'
+                    },
+                    getters: {
+                        name: () => {}
+                    },
+                    actions: {
+                        add: () => {}
+                    },
+                    mutations: {
+                        ADD_NAME: (state, payload) => {
+                            state.name += payload.last
+                        }
+                    }
+                }
+            }
+        },
+        b: {
+            state: {
+                name: 'xxx'
+            },
+            getters: {
+                name: () => {}
+            },
+            actions: {
+                add: () => {}
+            },
+            mutations: {
+                ADD_NAME: (state, payload) => {
+                    state.name += payload.last
+                }
+            }
+        }
+    }
+}
+
+/**
+ * description: 数据扁平化
+ * @param {object} store 根模块
+ * @param {object} rootState 根state
+ * @param {array} path 子模块路径
+ * @param {object} module 子模块
+ * return: {object} 返回新的根模块
+ */
+function installModule(store, rootState, path, module) {
+    if (path.length) {
+        let parentState = getParentState(rootState, path.slice(0, -1))
+        let namespaced = getNamespaced(path)
+        parentState[path[path.length-1]] = module.state
+        store.modules[namespaced] = module
+        forEach(module.getters, (handle, key) => {
+            store.getters[namespaced + key] = handle
+        })
+        forEach(module.actions, (handle, key) => {
+            store.actions[namespaced + key] = handle
+        })
+        forEach(module.mutations, (handle, key) => {
+            store.mutations[namespaced + key] = handle
+        })
+    }
+    if (module.modules) {
+        forEach(module.modules, (module, key) => {
+            installModule(store, rootState, path.concat(key), module)
+        })
+    }
+}
+installModule(store, store.state, [], store)
+console.log(store)
+/**
+ * 
+ * @param {object} rootState root state
+ * @param {array} path 模块路径
+ * return：{object} 当前模块父state
+ */
+function getParentState(rootState, path) {
+    return path.reduce((state, key) => {
+        return state[key]
+    }, rootState)
+}
+/**
+ * 获取路径对应的命名空间
+ * @param {array} path 模块路径
+ * return: {string}
+ */
+function getNamespaced(path) {
+    return path.reduce((namespaced, key) => {
+        return namespaced + (key + "/")
+    }, "")
+}
+/**
+ * 遍历对象
+ * @param {object} obj 
+ * @param {function} fn  
+ * return: void
+ */
+function forEach(obj, fn) {
+    Object.keys(obj).forEach(key => {
+        fn(obj[key], key)
+    })
+}
 
 ```
