@@ -2,6 +2,7 @@
 - [模块解析方式](#模块解析方式)
 - [响应式原理](#响应式原理)
 - [模块安装](#模块安装)
+- [依赖收集](#依赖收集)
 * #### 模块解析方式
 >通过深度优先进行节点遍历，每遍历节点时更新路径进行路径跟踪，从而获得目标数据
 
@@ -367,4 +368,78 @@ function forEach(obj, fn) {
         }
     }
 }
+```
+* ### 依赖收集
+>理由： 1. 只对用到的数据进行执行render function；2. 当属性变化时，能够通知所有的vue实例
+
+1. 通过发布订阅模式实现，实例代码
+```javascript
+    //依赖收集服务，提供注册和通知更新服务
+    class Dep {
+        constructor() {
+            this.sub = []
+        }
+        addSub(watcher, obj, key, value) {
+            watcher.save(obj, key, value)
+            this.sub.push(watcher)
+        }
+        notify(obj, k) {
+            this.sub.forEach(watcher => {
+                watcher.update(obj, k)
+            })
+        }
+    }
+    class Watcher {
+        constructor(name) {
+            this._obj = {}
+            this._name = name
+        }
+        save(obj, key, value) {
+            this._obj[key] = value
+        }
+        update(obj, k) {
+            console.log(`${this._name}: 对象的${k}属性改变了，更新后的前后为${this._obj[k]}-${obj[k]}`)
+        }
+    }
+
+    function defineActive(obj) {
+        Object.keys(obj).forEach(k => {
+            if (typeof obj[k] != "object") {
+                _defineAttr(obj, k, obj[k])
+                return;
+            }
+            defineActive(obj[k])
+        })
+        function _defineAttr(obj, key, value) {
+            const dep = new Dep()
+            Object.defineProperty(obj, key, {
+                configurable: true,
+                enumerable: true,
+                get: () => {
+                    dep.addSub(watcher1, obj, key, value)
+                    dep.addSub(watcher2, obj, key, value)
+                    return value
+                },
+                set: (_value) => {
+                    if (_value === value) return;
+                    value = _value
+                    dep.notify(obj, key)
+                }
+            })
+        }
+    }
+    const watcher1 = new Watcher("watcher1")
+    const watcher2 = new Watcher("watcher2")
+    const obj = {
+        name: "cq",
+        person: {
+            habits: "music"
+        }
+    }
+    defineActive(obj)
+    obj.person.habits    //订阅
+    obj.person.habits = "football"
+    //输出
+    //watcher1: 对象的habits属性改变了，更新后的前后为music-football
+    //watcher2: 对象的habits属性改变了，更新后的前后为football-football
 ```
