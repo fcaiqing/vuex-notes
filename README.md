@@ -171,6 +171,21 @@ obj.title = "op"    //title data updated to op
 obj.people[1].age = 189 //age data updated to 189
 
 ```
+>针对属性值为数组，通过重写数组方法通知更新
+示例如下
+```javascript
+function defineArr(arr) {
+    const arrfnc = ['push', 'splice']
+    const _arr = Object.create(Array.prototype)
+    arrfnc.forEach(func => {
+        _arr[func] = function () {
+            console.log("数据改变了", func)
+            Array.prototype[func].apply(this, arguments)
+        }
+    })
+    Object.setPrototypeOf(arr, _arr)
+}
+```
 * ### 模块安装
 >store各个模块的安装过程其实就是数据扁平化处理过程，处理过程中根据namespaced来决定是否启用命名空间
 1. 实例代码
